@@ -68,7 +68,7 @@ def scan_directories(root_dir):
     return games
 
 
-def generate_manifest(output_file='games.json'):
+def generate_manifest(output_file='apps.json'):
     """Generate the games manifest file."""
     # Get the directory where this script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -99,7 +99,7 @@ def generate_manifest(output_file='games.json'):
 
 def main():
     """Main entry point."""
-    output_file = 'games.json'
+    output_file = 'apps.json'
     
     # Parse command line arguments
     if len(sys.argv) > 1:
