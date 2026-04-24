@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Aurora Browser - A lightweight browser interface">
+	<title>Aurora Browser</title>
+	<style>
+		/* Aurora Browser - Main Stylesheet */
+
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		:root {
+			--bg-primary: #202124;
+			--bg-secondary: #35363a;
+			--bg-tertiary: #202124;
+			--bg-hover: #4a4d51;
+			--bg-active: #5f6368;
+			--text-primary: #e8eaed;
+			--text-secondary: #9aa0a6;
+			--accent-color: #8ab4f8;
+			--accent-hover: #aecbfa;
+			--border-color: #5f6368;
+			--tab-bg: transparent;
+			--tab-active: #35363a;
+		}
+
+		html, body {
+			height: 100%;
+			overflow: hidden;
+		}
+
+		body {
+			font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+			background: var(--bg-primary);
+			color: var(--text-primary);
+		}
+
+		/* Browser Container */
+		.browser-container {
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+			width: 100vw;
+		}
+
+		/* Tab Bar */
+		.tabs-container {
+			display: flex;
+			align-items: flex-end;
+			height: 44px;
+			background: var(--bg-primary);
+			padding: 8px 8px 0 8px;
+			gap: 6px;
+			overflow-x: auto;
+		}
+
+		.tabs-container::-webkit-scrollbar {
+			display: none;
+		}
+
+		.tab {
+			display: flex;
+			align-items: center;
+			min-width: 140px;
+			max-width: 240px;
+			height: 36px;
+			padding: 0 12px;
+			background: transparent;
+			border-radius: 12px 12px 0 0;
+			cursor: pointer;
+			gap: 10px;
+			position: relative;
+			transition: background 0.2s;
+			margin-bottom: 0;
+		}
+
+		.tab.active {
+			background: var(--bg-secondary);
+			box-shadow: 0 0 0 1px var(--border-color);
+			z-index: 2;
+		}
+
+		.tab:hover:not(.active) {
+			background: var(--bg-hover);
+			border-radius: 12px;
+			margin-bottom: 4px;
+		}
+
+		.tab img {
+			width: 16px;
+			height: 16px;
+		}
+
+		.tab span {
+			flex: 1;
+			font-size: 13px;
+			font-weight: 500;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			color: var(--text-primary);
+		}
+
+		.tab-close {
+			width: 20px;
+			height: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50%;
+			font-size: 14px;
+			color: var(--text-secondary);
+			opacity: 0;
+			transition: opacity 0.1s, background 0.1s;
+			background: none;
+			border: none;
+			cursor: pointer;
+			padding: 0;
+		}
+
+		.tab:hover .tab-close {
+			opacity: 1;
+		}
+
+		.tab-close:hover {
+			background: var(--bg-active);
+			color: var(--text-primary);
+		}
+
+		/* New Tab Button */
+		.new-tab-button {
+			width: 32px;
+			height: 32px;
+			min-width: 32px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: transparent;
+			border: none;
+			border-radius: 50%;
+			color: var(--text-primary);
+			font-size: 20px;
+			cursor: pointer;
+			margin-bottom: 4px;
+			margin-left: 4px;
+			transition: background 0.2s;
+		}
+
+		.new-tab-button:hover {
+			background: var(--bg-hover);
+		}
+
+		/* Navigation Bar */
+		.toolbar {
+			display: flex;
+			align-items: center;
+			height: 52px;
+			background: var(--bg-secondary);
+			padding: 0 12px;
+			gap: 12px;
+			border-bottom: 1px solid var(--border-color);
+		}
+
+		.nav-buttons {
+			display: flex;
+			gap: 8px;
+		}
+
+		button {
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: transparent;
+			border: none;
+			border-radius: 50%;
+			color: var(--text-primary);
+			font-size: 18px;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+
+		button:hover:not(:disabled) {
+			background: var(--bg-hover);
+		}
+
+		button:disabled {
+			color: var(--text-secondary);
+			opacity: 0.4;
+			cursor: default;
+		}
+
+		/* Address Bar */
+		.address-bar-container {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			background: var(--bg-tertiary);
+			border-radius: 99px;
+			padding: 0 16px;
+			height: 38px;
+			border: 2px solid transparent;
+			transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+		}
+
+		.address-bar-container:hover {
+			background: var(--bg-active);
+		}
+
+		.address-bar-container:focus-within {
+			background: var(--bg-primary);
+			border-color: var(--accent-color);
+			box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.3);
+		}
+
+		.address-bar {
+			flex: 1;
+			background: transparent;
+			border: none;
+			outline: none;
+			color: var(--text-primary);
+			font-size: 14px;
+			padding: 0;
+		}
+
+		.address-bar::placeholder {
+			color: var(--text-secondary);
+		}
+
+		/* Content area */
+		.content-area {
+			flex: 1;
+			overflow: hidden;
+			background: var(--bg-primary);
+		}
+
+		.tab-content {
+			display: none;
+			width: 100%;
+			height: 100%;
+			position: relative;
+		}
+
+		.tab-content.active {
+			display: flex;
+		}
+
+		.tab-content iframe {
+			width: 100%;
+			height: 100%;
+			border: none;
+		}
+
+		/* DuckDuckGo search page */
+		.search-container {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: var(--bg-primary);
+			padding: 20px;
+		}
+
+		.search-box {
+			background: var(--bg-secondary);
+			border-radius: 24px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+			padding: 8px 16px;
+			width: 100%;
+			max-width: 600px;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.search-box input {
+			flex: 1;
+			border: none;
+			padding: 12px 0;
+			font-size: 16px;
+			outline: none;
+			background: transparent;
+			color: var(--text-primary);
+		}
+
+		.search-box input::placeholder {
+			color: var(--text-secondary);
+		}
+
+		.search-box button {
+			background: var(--accent-color);
+			color: var(--bg-primary);
+			border: none;
+			border-radius: 50%;
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			font-size: 18px;
+			padding: 0;
+			min-width: auto;
+			transition: background 0.2s;
+		}
+
+		.search-box button:hover {
+			background: var(--accent-hover);
+		}
+
+		.duckduckgo-logo {
+			margin-bottom: 40px;
+			font-size: 48px;
+			font-weight: bold;
+			color: var(--accent-color);
+			font-family: Arial, sans-serif;
+			letter-spacing: 8px;
+		}
+
+		.aurora-logo {
+			margin-bottom: 40px;
+			font-size: 56px;
+			font-weight: 300;
+			color: var(--text-primary);
+			letter-spacing: 2px;
+		}
+
+		.quick-links {
+			margin-top: 50px;
+			width: 100%;
+			max-width: 600px;
+		}
+
+		.quick-links h3 {
+			font-size: 14px;
+			color: var(--text-secondary);
+			margin-bottom: 20px;
+			text-align: center;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+		}
+
+		.shortcuts-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+			gap: 16px;
+		}
+
+		.shortcut {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 16px;
+			background: var(--bg-secondary);
+			border-radius: 12px;
+			border: 1px solid var(--border-color);
+			text-decoration: none;
+			color: var(--text-primary);
+			transition: background 0.2s, transform 0.2s, border-color 0.2s;
+			cursor: pointer;
+		}
+
+		.shortcut:hover {
+			background: var(--bg-hover);
+			border-color: var(--accent-color);
+			transform: translateY(-2px);
+		}
+
+		.shortcut-icon {
+			font-size: 32px;
+			margin-bottom: 8px;
+		}
+
+		.shortcut-label {
+			font-size: 12px;
+			font-weight: 500;
+			text-align: center;
+		}
+
+		.search-info {
+			margin-top: 30px;
+			text-align: center;
+			color: var(--text-secondary);
+			font-size: 12px;
+		}
+	</style>
+	<script src="https://unpkg.com/@ungap/custom-elements-builtin"></script>
+	<script src="x-frame.js" type="module"></script>
+</head>
+<body>
+	<div class="browser-container">
+		<!-- Toolbar -->
+		<div class="toolbar">
+			<div class="nav-buttons">
+			<button id="backBtn" title="Back">←</button>
+			<button id="forwardBtn" title="Forward">→</button>
+				<button id="refreshBtn" title="Refresh">⟳</button>
+			</div>
+			<div class="address-bar-container">
+				<input type="text" class="address-bar" id="addressBar" placeholder="Search with DuckDuckGo or enter a URL...">
+			</div>
+		</div>
+
+		<!-- Tabs -->
+		<div class="tabs-container" id="tabsContainer"></div>
+
+		<!-- Content -->
+		<div class="content-area" id="contentArea"></div>
+	</div>
+
+	<script>
+		// Suppress unhandled promise rejections from iframe loading
+		window.addEventListener('unhandledrejection', e => {
+			if (e.reason && (e.reason.toString().includes('CORS') || e.reason.toString().includes('Failed to fetch'))) {
+				e.preventDefault();
+			}
+		});
+		
+		class BrowserTabs {
+			constructor() {
+				this.tabs = [];
+				this.activeTabId = null;
+				this.tabCounter = 0;
+				this.history = {};
+				this.historyIndex = {};
+
+				this.tabsContainer = document.getElementById('tabsContainer');
+				this.contentArea = document.getElementById('contentArea');
+				this.addressBar = document.getElementById('addressBar');
+
+				this.setupEventListeners();
+				this.createNewTab('home');
+			}
+
+			setupEventListeners() {
+				document.getElementById('backBtn').addEventListener('click', () => this.goBack());
+				document.getElementById('forwardBtn').addEventListener('click', () => this.goForward());
+				document.getElementById('refreshBtn').addEventListener('click', () => this.refresh());
+
+				this.addressBar.addEventListener('keypress', (e) => {
+					if (e.key === 'Enter') {
+						this.navigateCurrentTab(this.addressBar.value);
+					}
+				});
+			}
+
+
+		createNewTab(type = 'blank', url = null) {
+			const tabId = `tab-${this.tabCounter++}`;
+			const baseUrl = type === 'home' ? 'about:blank' : (url || 'about:blank');
+
+			const tab = {
+				id: tabId,
+				title: type === 'home' ? 'DuckDuckGo' : 'New Tab',
+				type: type,
+				url: baseUrl,
+				currentUrl: null,
+				favicon: null
+			};
+
+			this.tabs.push(tab);
+			this.history[tabId] = [];
+			this.historyIndex[tabId] = -1;
+
+			this.renderTabs();
+
+			if (type === 'home') {
+				this.createHomeContent(tabId);
+			}
+
+			this.selectTab(tabId);
+
+			return tabId;
+		}
+
+		createHomeContent(tabId) {
+			let content = document.getElementById(`content-${tabId}`);
+			if (!content) {
+				content = document.createElement('div');
+				content.className = 'tab-content active';
+				content.id = `content-${tabId}`;
+				this.contentArea.appendChild(content);
+			}
+
+			content.innerHTML = `
+				<div class="search-container">
+					<div class="aurora-logo">AURORA</div>
+					<div class="search-box">
+						<input type="text" placeholder="Search with DuckDuckGo or enter a URL...">
+						<button title="Search">🔍</button>
+					</div>
+					<div class="quick-links">
+						<h3>Quick Shortcuts</h3>
+						<div class="shortcuts-grid">
+							<a href="https://github.com" class="shortcut">
+								<span class="shortcut-icon">🐙</span>
+								<span class="shortcut-label">GitHub</span>
+							</a>
+							<a href="https://stackoverflow.com" class="shortcut">
+								<span class="shortcut-icon">💻</span>
+								<span class="shortcut-label">StackOverflow</span>
+							</a>
+							<a href="https://reddit.com" class="shortcut">
+								<span class="shortcut-icon">🔴</span>
+								<span class="shortcut-label">Reddit</span>
+							</a>
+							<a href="https://wikipedia.org" class="shortcut">
+								<span class="shortcut-icon">📖</span>
+								<span class="shortcut-label">Wikipedia</span>
+							</a>
+							<a href="https://youtube.com" class="shortcut">
+								<span class="shortcut-icon">▶️</span>
+								<span class="shortcut-label">YouTube</span>
+							</a>
+							<a href="https://twitter.com" class="shortcut">
+								<span class="shortcut-icon">𝕏</span>
+								<span class="shortcut-label">Twitter</span>
+							</a>
+						</div>
+					</div>
+					<div class="search-info">
+						<p>Aurora Browser • Fast, Modern, Privacy-Focused</p>
+					</div>
+				</div>
+			`;
+
+			this.contentArea.appendChild(content);
+
+			const searchInput = content.querySelector('.search-box input');
+			const searchBtn = content.querySelector('.search-box button');
+
+			const performSearch = (query) => {
+				if (query.trim()) {
+					this.navigateCurrentTab(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`);
+				}
+			};
+
+			searchInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					performSearch(searchInput.value);
+				}
+			});
+
+			searchBtn.addEventListener('click', () => {
+				performSearch(searchInput.value);
+			});
+
+			// Handle shortcut links
+			content.querySelectorAll('.shortcut').forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.preventDefault();
+					this.navigateTo(link.href);
+				});
+			});
+
+			searchInput.focus();
+		}
+
+		navigateCurrentTab(input) {
+			let url = input.trim();
+			
+			if (!url.includes('://') && !url.startsWith('about:')) {
+				url = `https://duckduckgo.com/?q=${encodeURIComponent(url)}`;
+			} else if (!url.includes('://')) {
+				url = `https://${url}`;
+			}
+
+			// Add to history
+			this.historyIndex[this.activeTabId]++;
+			this.history[this.activeTabId] = this.history[this.activeTabId].slice(0, this.historyIndex[this.activeTabId]);
+			this.history[this.activeTabId].push(url);
+
+			const tab = this.tabs.find(t => t.id === this.activeTabId);
+			if (tab) {
+				tab.currentUrl = url;
+				this.updateContent();
+				this.updateAddressBar();
+				this.updateTabTitle(this.activeTabId, new URL(url).hostname || 'Loading...');
+			}
+		}
+
+		navigateTo(url) {
+			this.navigateCurrentTab(url);
+		}
+
+		updateContent() {
+			const tab = this.tabs.find(t => t.id === this.activeTabId);
+			if (!tab || !tab.currentUrl) return;
+
+			let content = document.getElementById(`content-${this.activeTabId}`);
+			if (!content) {
+				content = document.createElement('div');
+				content.className = 'tab-content';
+				content.id = `content-${this.activeTabId}`;
+				this.contentArea.appendChild(content);
+			}
+
+			content.innerHTML = `<iframe is="x-frame" src="${tab.currentUrl}"></iframe>`;
+
+			// Update active classes
+			document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+			content.classList.add('active');
+		
+			// Attach event listener to iframe for page updates
+			const iframe = content.querySelector('iframe[is="x-frame"]');
+			if (iframe) {
+				console.log('[BrowserUI] Attaching event listener to iframe:', iframe);
+				
+				try {
+					// Remove old listeners if any
+					if (this._framePageLoadedHandler) {
+						iframe.removeEventListener('x-frame-page-loaded', this._framePageLoadedHandler);
+					}
+					
+					// Create and attach new handler with error handling
+					this._framePageLoadedHandler = (e) => {
+						try {
+							const activeTab = this.tabs.find(t => t.id === this.activeTabId);
+							if (activeTab) {
+								activeTab.favicon = e.detail.favicon;
+								activeTab.currentUrl = e.detail.url;
+							}
+							this.updateTabTitle(this.activeTabId, e.detail.title);
+							this.updateAddressBar();
+							this.updateFavicon(e.detail.favicon);
+							this.renderTabs();
+						} catch (err) {
+							console.error('[BrowserUI] Error handling page loaded event:', err);
+						}
+					};
+					
+					iframe.addEventListener('x-frame-page-loaded', this._framePageLoadedHandler);
+				} catch (err) {
+					console.error('[BrowserUI] Error attaching listener:', err);
+				}
+			}
+		}
+
+		renderTabs() {
+			this.tabsContainer.innerHTML = '';
+
+			this.tabs.forEach(tab => {
+				const tabEl = document.createElement('div');
+				tabEl.className = `tab ${tab.id === this.activeTabId ? 'active' : ''}`;
+				
+				// Try to show favicon if available
+				const faviconHtml = tab.favicon ? `<img src="${tab.favicon}" alt="" style="width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0;">` : '';
+				
+				tabEl.innerHTML = `
+					${faviconHtml}
+					<span>${tab.title}</span>
+					<button class="tab-close">✕</button>
+				`;
+
+				tabEl.addEventListener('click', (e) => {
+					if (!e.target.classList.contains('tab-close')) {
+						this.selectTab(tab.id);
+					}
+				});
+
+				tabEl.querySelector('.tab-close').addEventListener('click', (e) => {
+					e.stopPropagation();
+					this.closeTab(tab.id);
+				});
+
+				this.tabsContainer.appendChild(tabEl);
+			});
+
+			const newTabBtn = document.createElement('button');
+			newTabBtn.className = 'new-tab-button';
+			newTabBtn.innerHTML = '+';
+			newTabBtn.addEventListener('click', () => this.createNewTab('blank'));
+			this.tabsContainer.appendChild(newTabBtn);
+		}
+
+		selectTab(tabId) {
+			this.activeTabId = tabId;
+			this.renderTabs();
+
+			// Hide all contents
+			document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+			// Show active content
+			let content = document.getElementById(`content-${tabId}`);
+			if (content) {
+				content.classList.add('active');
+				
+				// Ensure event listener is attached to iframe
+				const iframe = content.querySelector('iframe[is="x-frame"]');
+				if (iframe) {
+					try {
+						// Create and attach handler if not already attached
+						if (!iframe._pageLoadedHandlerAttached) {
+							this._framePageLoadedHandler = (e) => {
+								try {
+									const activeTab = this.tabs.find(t => t.id === this.activeTabId);
+									if (activeTab) {
+										activeTab.favicon = e.detail.favicon;
+									}
+									this.updateTabTitle(this.activeTabId, e.detail.title);
+									this.updateAddressBar();
+									this.updateFavicon(e.detail.favicon);
+									this.renderTabs();
+								} catch (err) {
+									console.error('[BrowserUI] Error handling event:', err);
+								}
+							};
+							
+							iframe.addEventListener('x-frame-page-loaded', this._framePageLoadedHandler);
+							iframe._pageLoadedHandlerAttached = true;
+						}
+					} catch (err) {
+						console.error('[BrowserUI] Error attaching listener:', err);
+					}
+				}
+			}
+
+			this.updateAddressBar();
+			this.updateNavigationButtons();
+		}
+
+		updateFavicon(faviconUrl) {
+			// Favicon is displayed in tabs only via the img tag in renderTabs()
+			// Do not modify the browser's actual favicon
+		}
+
+		closeTab(tabId) {
+			const index = this.tabs.findIndex(t => t.id === tabId);
+			if (index === -1) return;
+
+			this.tabs.splice(index, 1);
+			delete this.history[tabId];
+			delete this.historyIndex[tabId];
+
+			if (this.tabs.length === 0) {
+				this.createNewTab('home');
+			} else if (this.activeTabId === tabId) {
+				this.selectTab(this.tabs[Math.max(0, index - 1)].id);
+			}
+
+			this.renderTabs();
+		}
+
+		goBack() {
+			const currentIndex = this.historyIndex[this.activeTabId];
+			if (currentIndex > 0) {
+				this.historyIndex[this.activeTabId]--;
+				const url = this.history[this.activeTabId][this.historyIndex[this.activeTabId]];
+				const tab = this.tabs.find(t => t.id === this.activeTabId);
+				tab.currentUrl = url;
+				this.updateContent();
+				this.updateAddressBar();
+				this.updateNavigationButtons();
+			}
+		}
+
+		goForward() {
+			const currentIndex = this.historyIndex[this.activeTabId];
+			if (currentIndex < this.history[this.activeTabId].length - 1) {
+				this.historyIndex[this.activeTabId]++;
+				const url = this.history[this.activeTabId][this.historyIndex[this.activeTabId]];
+				const tab = this.tabs.find(t => t.id === this.activeTabId);
+				tab.currentUrl = url;
+				this.updateContent();
+				this.updateAddressBar();
+				this.updateNavigationButtons();
+			}
+		}
+
+		refresh() {
+			const tab = this.tabs.find(t => t.id === this.activeTabId);
+			if (tab && tab.currentUrl) {
+				this.updateContent();
+			}
+		}
+
+		updateNavigationButtons() {
+			const currentIndex = this.historyIndex[this.activeTabId] || -1;
+			const historyLength = (this.history[this.activeTabId] || []).length;
+
+			document.getElementById('backBtn').disabled = currentIndex <= 0;
+			document.getElementById('forwardBtn').disabled = currentIndex >= historyLength - 1;
+		}
+
+		updateAddressBar() {
+			const tab = this.tabs.find(t => t.id === this.activeTabId);
+			if (tab && tab.currentUrl) {
+				this.addressBar.value = tab.currentUrl;
+			}
+		}
+
+		updateTabTitle(tabId, title) {
+			const tab = this.tabs.find(t => t.id === tabId);
+			if (tab) {
+				tab.title = title.length > 30 ? title.substring(0, 30) + '...' : title;
+				this.renderTabs();
+			}
+		}
+	}
+
+	// Initialize browser
+	const browser = new BrowserTabs();
+	</script>
+</body>
+</html>
