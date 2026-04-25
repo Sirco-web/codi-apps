@@ -3,5 +3,10 @@
     "id": "aurora-mini",
     "name": "Aurora Mini",
     "folder": "aurora-mini"
+  },
+  {
+    "id": "gust",
+    "name": "Gust",
+    "folder": "gust"
   }
 ]
